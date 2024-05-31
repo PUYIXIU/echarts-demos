@@ -1,19 +1,18 @@
 <script setup>
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
+import "highlight.js/styles/atom-one-dark.css";
 import NavHeader from '@/views/Home/NavHeader/index.vue'
-import {menuData} from "@/data/menuData.js";
-import {getCurrentInstance,ref,watch,onBeforeMount} from "vue";
+import {menuData, menuMap} from "@/data/menuData.js";
+import {getCurrentInstance,ref,watch,onBeforeMount,onMounted} from "vue";
 import http from "@/api/http";
 
 const {proxy} = getCurrentInstance()
-const layout_type = ref('chart')
-
-
 
 const markdownHTML = ref('') // markdown内容
 let markdownRender = undefined
-
+let defaultActiveIndex = ref('1') // 默认菜单
+const layout_type = ref('custom')
 // 创建markdown渲染器
 function createMarkdownRenderer(){
   markdownRender = new MarkdownIt({
@@ -32,17 +31,20 @@ function createMarkdownRenderer(){
 }
 onBeforeMount(()=>{
   createMarkdownRenderer()
+  let currentMenu = menuMap[location.hash.replace('#','')]
+  currentMenu && menuSelect(currentMenu)
 })
 function getMarkdown(params){
   http.getMarkdown(params).then(res => {
     markdownHTML.value = markdownRender.render(res.data);
   });
 }
-function menuSelet(params){
+function menuSelect(params){
   let {path,type} = params
   type == 'chart' && getMarkdown(path)
   layout_type.value = type
   proxy.$router.replace(path)
+  defaultActiveIndex.value = params.index
 }
 
 
@@ -53,8 +55,9 @@ function menuSelet(params){
     <nav-header/>
     <div class="main-body">
       <div class="left-menu">
-        <el-menu mode="vertical" class="main-menu" default-active="2-1">
-          <el-menu-item v-for="menuItem in menuData.noChildrenMenu" :index="menuItem.index" @click="menuSelet(menuItem)">
+<!--        主菜单-->
+        <el-menu ref="MainMenuRef" mode="vertical" class="main-menu" :default-active="defaultActiveIndex">
+          <el-menu-item v-for="menuItem in menuData.noChildrenMenu" :index="menuItem.index" @click="menuSelect(menuItem)">
             <template #title>
               <span>{{menuItem.title}}</span>
             </template>
@@ -63,9 +66,9 @@ function menuSelet(params){
             <template #title>
               <span>{{subMenu.title}}</span>
             </template>
-            <el-menu-item v-for="subMenuItem in subMenu.children" :index="subMenuItem.index" @click="menuSelet(subMenuItem)">
+            <el-menu-item v-for="subMenuItem in subMenu.children" :index="subMenuItem.index" @click="menuSelect(subMenuItem)">
               <template #title>
-                <span>{{subMenuItem.title}}</span>
+                <span>{{subMenuItem.menuTitle}}</span>
               </template>
             </el-menu-item>
           </el-sub-menu>
@@ -74,12 +77,12 @@ function menuSelet(params){
       <div class="right-content">
         <div class="main-chart" v-if="layout_type == 'chart'">
           <div class="chart">
-            <router-view keep-alive />
+            <router-view keep-alive/>
           </div>
           <div class="mark-down-content" v-html="markdownHTML">
           </div>
         </div>
-        <router-view keep-alive v-if="layout_type == 'custom'" />
+        <router-view keep-alive v-if="layout_type == 'custom'"  @menu-select="menuSelect" />
 
 <!--        尾部工具栏-->
         <div class="foot-tool-bar" >
@@ -133,6 +136,16 @@ function menuSelet(params){
       width:90%;
       //height:60vh;
       border:0.3rem dashed $main-green;
+      padding:2rem;
+      ::v-deep(pre){
+        margin-top:1rem;
+        padding:0.5rem;
+        border:1px solid #264552;
+        font-family: robot;
+        font-size:0.8rem;
+        line-height:1.3rem;
+        background:#efefed;
+      }
     }
   }
   .foot-tool-bar{

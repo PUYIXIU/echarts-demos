@@ -4,6 +4,7 @@ html,body{
 *{
   padding:0;
   margin:0;
+  box-sizing: border-box;
   font-family: Alibaba-Health-Normal;
 }
 
@@ -26,3 +27,6 @@ $main-light-yellow: #f1deb0;
 $main-white: #e1ddd3;
 $main-orange:#f4a261;
 $main-red:#e76f51;
+
+
+$main-black:#333;

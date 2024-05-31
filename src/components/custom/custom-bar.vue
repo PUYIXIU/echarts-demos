@@ -112,6 +112,9 @@ onBeforeUnmount(()=>{
 </template>
 
 <style scoped lang="scss">
+.chart-wrapper{
+  padding:0.5rem;
+}
 .chart-canvas{
   width:100%;
   height:100%;
